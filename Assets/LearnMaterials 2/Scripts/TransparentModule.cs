@@ -6,7 +6,10 @@ using UnityEngine;
 [HelpURL("https://docs.google.com/document/d/1Cmm__cbik5J8aHAI6PPaAUmEMF3wAcNo3rpgzsYPzDM/edit?usp=sharing")]
 public class TransparentModule : MonoBehaviour
 {
-    private float changeSpeed;
+    [SerializeField]
+    [Tooltip("Скорость изменения прозрачности")]
+    [Range(0.1f, 10f)]
+    private float changeSpeed = 1.0f;
 
     private float defaultAlpha;
     private Material mat;
@@ -21,16 +24,37 @@ public class TransparentModule : MonoBehaviour
 
     public void ActivateModule()
     {
+        ShrinkBeforeDestroy();
+
         float target = toDefault ? defaultAlpha : 0;
         StopAllCoroutines();
         StartCoroutine(ChangeTransparencyCoroutine(new Color(mat.color.r, mat.color.g, mat.color.b, target)));
         toDefault = !toDefault;
     }
 
-    public void ReturnToDefaultState()
+    private void ShrinkBeforeDestroy()
     {
-        toDefault = true;
-        ActivateModule();
+        foreach (Transform child in transform)
+        {
+            StartCoroutine(ShrinkChild(child));
+        }
+    }
+
+    private IEnumerator ShrinkChild(Transform child)
+    {
+        float elapsedTime = 0f;
+        Vector3 initialScale = child.localScale;
+        Vector3 targetScale = Vector3.zero;
+
+        while (elapsedTime < 1f)
+        {
+            child.localScale = Vector3.Lerp(initialScale, targetScale, elapsedTime);
+            elapsedTime += Time.deltaTime * changeSpeed;
+            yield return null;
+        }
+
+        child.localScale = targetScale;
+        Destroy(child.gameObject);
     }
 
     private IEnumerator ChangeTransparencyCoroutine(Color target)
