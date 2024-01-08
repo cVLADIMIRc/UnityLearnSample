@@ -28,6 +28,10 @@ public class SampleScriptList : SampleScriptBase
             {
                 scr.Use();
             }
+            if (script is RotationScript rts)
+            {
+                rts.Use();
+            }
         }
     }
     void Start()
